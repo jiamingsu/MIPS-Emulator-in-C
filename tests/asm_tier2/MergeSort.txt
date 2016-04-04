@@ -1,0 +1,253 @@
+
+MergeSort:     file format elf32-tradbigmips
+
+
+Disassembly of section .text:
+
+00400110 <_ftext>:
+# nums address -> s0
+# sorted address -> s1
+# 1st out of bounds nums address -> s2
+# 1st out of bounds sorted address -> s7
+# (len/2)*4 -> s6
+	la	$s0,nums
+  400110:	8f908018 	lw	$16,-32744($28)
+  400114:	00000000 	nop
+  400118:	26100000 	addiu	$16,$16,0
+	la	$s1,sorted
+  40011c:	8f918018 	lw	$17,-32744($28)
+  400120:	00000000 	nop
+  400124:	26310028 	addiu	$17,$17,40
+	la	$t0,length
+  400128:	8f888018 	lw	$8,-32744($28)
+  40012c:	00000000 	nop
+  400130:	25080050 	addiu	$8,$8,80
+  400134:	00000000 	nop
+	lw	$s6,($t0)
+  400138:	8d160000 	lw	$22,0($8)
+  40013c:	00000000 	nop
+	sll	$s6,$s6,1
+  400140:	0016b040 	sll	$22,$22,0x1
+	sll	$s2,$s6,1
+  400144:	00169040 	sll	$18,$22,0x1
+	xori	$s7,$s2,0
+  400148:	3a570000 	xori	$23,$18,0x0
+	addu	$s2,$s2,$s0
+  40014c:	02509021 	addu	$18,$18,$16
+	addu	$s7,$s7,$s1
+  400150:	02f1b821 	addu	$23,$23,$17
+# s3 -> (gap/2)*4
+# s4 -> array switch status
+	li	$s3,4
+  400154:	24130004 	li	$19,4
+	li	$s4,1
+  400158:	24140001 	li	$20,1
+
+0040015c <GAP>:
+# t0 iterates over partitions of size gap (i)
+# t8 stores merge destination pointer
+GAP:	xori	$t0,$s0,0
+  40015c:	3a080000 	xori	$8,$16,0x0
+	xori	$t8,$s1,0
+  400160:	3a380000 	xori	$24,$17,0x0
+	sub	$t9,$s1,$s0
+  400164:	0230c822 	sub	$25,$17,$16
+	addi	$t9,$t9,-4
+  400168:	2339fffc 	addi	$25,$25,-4
+
+0040016c <PART>:
+# t1 is i + gap/2
+# t2 is i + gap
+PART:	addu	$t1,$t0,$s3
+  40016c:	01134821 	addu	$9,$8,$19
+# case for empty second partition
+	blt 	$t1,$s2,L
+  400170:	0132082a 	slt	$1,$9,$18
+  400174:	1420000e 	bnez	$1,4001b0 <L>
+  400178:	00000000 	nop
+	addu	$t2,$t1,$s3
+  40017c:	01335021 	addu	$10,$9,$19
+	sub	$t3,$t0,$s0
+  400180:	01105822 	sub	$11,$8,$16
+	add	$t3,$t3,$s1
+  400184:	01715820 	add	$11,$11,$17
+
+00400188 <CPY>:
+CPY:	lw	$t5,($t0)
+  400188:	8d0d0000 	lw	$13,0($8)
+  40018c:	00000000 	nop
+	sw	$t5,($t3)
+  400190:	ad6d0000 	sw	$13,0($11)
+	addiu	$t0,$t0,4
+  400194:	25080004 	addiu	$8,$8,4
+	bne	$t0,$s2,CPY
+  400198:	1512fffb 	bne	$8,$18,400188 <CPY>
+  40019c:	00000000 	nop
+	addiu	$t3,$t3,4
+  4001a0:	256b0004 	addiu	$11,$11,4
+	j	CLEAN
+  4001a4:	1000002c 	b	400258 <CLEAN>
+  4001a8:	00000000 	nop
+	nop	
+  4001ac:	00000000 	nop
+
+004001b0 <L>:
+L:	ble	$t2,$s2,P
+  4001b0:	024a082a 	slt	$1,$18,$10
+  4001b4:	10200003 	beqz	$1,4001c4 <P>
+  4001b8:	00000000 	nop
+	nop
+  4001bc:	00000000 	nop
+	xori	$t2,$s2,0
+  4001c0:	3a4a0000 	xori	$10,$18,0x0
+
+004001c4 <P>:
+# start merge
+P:	xori	$t4,$t1,0
+  4001c4:	392c0000 	xori	$12,$9,0x0
+	add	$t7,$t2,$t9
+  4001c8:	01597820 	add	$15,$10,$25
+
+004001cc <MERGE>:
+# case where second half is empty
+MERGE:	bne	$t4,$t2,N1
+  4001cc:	158a0007 	bne	$12,$10,4001ec <N1>
+  4001d0:	00000000 	nop
+	lw	$t5,($t0)
+  4001d4:	8d0d0000 	lw	$13,0($8)
+  4001d8:	00000000 	nop
+	sw	$t5,($t8)
+  4001dc:	af0d0000 	sw	$13,0($24)
+	j	ME
+  4001e0:	10000016 	b	40023c <ME>
+  4001e4:	00000000 	nop
+	addiu	$t0,$t0,4
+  4001e8:	25080004 	addiu	$8,$8,4
+
+004001ec <N1>:
+# cases where first half is empty
+N1:	bne	$t0,$t1,N2
+  4001ec:	15090007 	bne	$8,$9,40020c <N2>
+  4001f0:	00000000 	nop
+	lw	$t5,($t4)
+  4001f4:	8d8d0000 	lw	$13,0($12)
+  4001f8:	00000000 	nop
+	sw	$t5,($t8)
+  4001fc:	af0d0000 	sw	$13,0($24)
+	j	ME
+  400200:	1000000e 	b	40023c <ME>
+  400204:	00000000 	nop
+	addiu	$t4,$t4,4
+  400208:	258c0004 	addiu	$12,$12,4
+
+0040020c <N2>:
+# load for comparison
+N2:	lw	$t5,($t0)
+  40020c:	8d0d0000 	lw	$13,0($8)
+	lw	$t6,($t4)
+  400210:	8d8e0000 	lw	$14,0($12)
+  400214:	00000000 	nop
+# take from second list
+	blt	$t5,$t6,N3	
+  400218:	01ae082a 	slt	$1,$13,$14
+  40021c:	14200005 	bnez	$1,400234 <N3>
+  400220:	00000000 	nop
+	sw	$t6,($t8)
+  400224:	af0e0000 	sw	$14,0($24)
+	j	ME
+  400228:	10000004 	b	40023c <ME>
+  40022c:	00000000 	nop
+	addiu	$t4,$t4,4
+  400230:	258c0004 	addiu	$12,$12,4
+
+00400234 <N3>:
+# take from first list
+N3:	sw	$t5,($t8)
+  400234:	af0d0000 	sw	$13,0($24)
+	addiu	$t0,$t0,4
+  400238:	25080004 	addiu	$8,$8,4
+
+0040023c <ME>:
+# increment and continue merging
+ME:	bne	$t8,$t7,MERGE
+  40023c:	170fffe3 	bne	$24,$15,4001cc <MERGE>
+  400240:	00000000 	nop
+	addiu	$t8,$t8,4
+  400244:	27180004 	addiu	$24,$24,4
+# end merge
+	blt	$t2,$s2,PART
+  400248:	0152082a 	slt	$1,$10,$18
+  40024c:	1420ffc7 	bnez	$1,40016c <PART>
+  400250:	00000000 	nop
+	xori	$t0,$t2,0
+  400254:	39480000 	xori	$8,$10,0x0
+
+00400258 <CLEAN>:
+# raise gap and swap array addresses
+CLEAN:	xor	$s0,$s0,$s1
+  400258:	02118026 	xor	$16,$16,$17
+	xor	$s1,$s0,$s1
+  40025c:	02118826 	xor	$17,$16,$17
+	xor	$s0,$s0,$s1
+  400260:	02118026 	xor	$16,$16,$17
+	xor	$s2,$s2,$s7
+  400264:	02579026 	xor	$18,$18,$23
+	xor	$s7,$s2,$s7
+  400268:	0257b826 	xor	$23,$18,$23
+	xor	$s2,$s2,$s7
+  40026c:	02579026 	xor	$18,$18,$23
+	xori	$s4,$s4,1
+  400270:	3a940001 	xori	$20,$20,0x1
+	blt 	$s3,$s6,GAP
+  400274:	0276082a 	slt	$1,$19,$22
+  400278:	1420ffb8 	bnez	$1,40015c <GAP>
+  40027c:	00000000 	nop
+	sll	$s3,$s3,1
+  400280:	00139840 	sll	$19,$19,0x1
+	beqz	$s4,SKIP
+  400284:	12800008 	beqz	$20,4002a8 <SKIP>
+  400288:	00000000 	nop
+
+0040028c <FIX>:
+# if necessary, make final copy
+FIX:	lw	$t0,($s0)
+  40028c:	8e080000 	lw	$8,0($16)
+  400290:	00000000 	nop
+	sw	$t0,($s1)
+  400294:	ae280000 	sw	$8,0($17)
+	addiu	$s0,$s0,4
+  400298:	26100004 	addiu	$16,$16,4
+	bne	$s0,$s2,FIX
+  40029c:	1612fffb 	bne	$16,$18,40028c <FIX>
+  4002a0:	00000000 	nop
+	addiu	$s1,$s1,4
+  4002a4:	26310004 	addiu	$17,$17,4
+
+004002a8 <SKIP>:
+#exit program
+SKIP:	li	$v0,0xFA1
+  4002a8:	24020fa1 	li	$2,4001
+	syscall
+  4002ac:	0000000c 	syscall
+
+
+Disassembly of section .data:
+
+01000000 <_fdata>:
+ 1000000:	0000000a 	0xa
+ 1000004:	00000009 	jalr	zero,zero
+ 1000008:	00000008 	jr	zero
+ 100000c:	00000007 	srav	zero,zero,zero
+ 1000010:	00000006 	srlv	zero,zero,zero
+ 1000014:	00000005 	0x5
+ 1000018:	00000004 	sllv	zero,zero,zero
+ 100001c:	00000003 	sra	zero,zero,0x0
+ 1000020:	00000002 	srl	zero,zero,0x0
+ 1000024:	00000001 	0x1
+
+01000028 <sorted>:
+	...
+
+01000050 <length>:
+ 1000050:	0000000a 	0xa
+	...

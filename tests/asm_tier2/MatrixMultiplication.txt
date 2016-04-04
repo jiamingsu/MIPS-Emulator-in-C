@@ -1,0 +1,172 @@
+
+MatrixMultiplication:     file format elf32-tradbigmips
+
+
+Disassembly of section .text:
+
+00400110 <_ftext>:
+result: .word 0:9
+.text
+
+# load row and column sizes of A and B
+# s0=Ar, s1=Ac, s2=Br, s3=Bc
+	la	$t0,sizeA
+  400110:	8f888018 	lw	$8,-32744($28)
+  400114:	00000000 	nop
+  400118:	25080030 	addiu	$8,$8,48
+  40011c:	00000000 	nop
+	lw	$s0,($t0)
+  400120:	8d100000 	lw	$16,0($8)
+	addiu	$t0,$t0,4
+  400124:	25080004 	addiu	$8,$8,4
+	lw	$s1,($t0)
+  400128:	8d110000 	lw	$17,0($8)
+
+	la	$t0,sizeB
+  40012c:	8f888018 	lw	$8,-32744($28)
+  400130:	00000000 	nop
+  400134:	25080038 	addiu	$8,$8,56
+  400138:	00000000 	nop
+	lw	$s2,($t0)
+  40013c:	8d120000 	lw	$18,0($8)
+	addiu	$t0,$t0,4
+  400140:	25080004 	addiu	$8,$8,4
+	lw	$s3,($t0)
+  400144:	8d130000 	lw	$19,0($8)
+
+# load matrix addresses
+# s4 = A, s5 = B, s6 = result
+	la	$s4,matrixA
+  400148:	8f948018 	lw	$20,-32744($28)
+  40014c:	00000000 	nop
+  400150:	26940000 	addiu	$20,$20,0
+	la	$s5,matrixB
+  400154:	8f958018 	lw	$21,-32744($28)
+  400158:	00000000 	nop
+  40015c:	26b50018 	addiu	$21,$21,24
+	la	$s6,result
+  400160:	8f968018 	lw	$22,-32744($28)
+  400164:	00000000 	nop
+  400168:	26d60040 	addiu	$22,$22,64
+  40016c:	00000000 	nop
+# copy result address to t7
+	xori	$t7,$s6,0
+  400170:	3acf0000 	xori	$15,$22,0x0
+	li	$t0,0
+  400174:	24080000 	li	$8,0
+
+00400178 <CROW>:
+CROW:	li	$t1,0
+  400178:	24090000 	li	$9,0
+# store starting loc in A in t4
+	multu	$t0,$s1
+  40017c:	01110019 	multu	$8,$17
+	mflo	$t4
+  400180:	00006012 	mflo	$12
+
+00400184 <CCOL>:
+CCOL:	
+# store dot in t3
+	li	$t3,0
+  400184:	240b0000 	li	$11,0
+# index is t2
+	li	$t2,0
+  400188:	240a0000 	li	$10,0
+
+0040018c <CROSS>:
+CROSS:	
+# load A[t0][t2] to t5
+	add	$t5,$t4,$t2
+  40018c:	018a6820 	add	$13,$12,$10
+	sll	$t5,$t5,2
+  400190:	000d6880 	sll	$13,$13,0x2
+	addu	$t5,$t5,$s4
+  400194:	01b46821 	addu	$13,$13,$20
+	lw	$t5,($t5)
+  400198:	8dad0000 	lw	$13,0($13)
+# load B[t2][t1] to t6
+	multu	$t2,$s3
+  40019c:	01530019 	multu	$10,$19
+	mflo	$t6
+  4001a0:	00007012 	mflo	$14
+	addu	$t6,$t6,$t1
+  4001a4:	01c97021 	addu	$14,$14,$9
+	sll	$t6,$t6,2
+  4001a8:	000e7080 	sll	$14,$14,0x2
+	addu	$t6,$t6,$s5
+  4001ac:	01d57021 	addu	$14,$14,$21
+	lw	$t6,($t6)
+  4001b0:	8dce0000 	lw	$14,0($14)
+  4001b4:	00000000 	nop
+# multiply and add
+	multu	$t5,$t6
+  4001b8:	01ae0019 	multu	$13,$14
+	mflo	$t5
+  4001bc:	00006812 	mflo	$13
+	addu	$t3,$t3,$t5
+  4001c0:	016d5821 	addu	$11,$11,$13
+# loop stuff
+	addiu	$t2,$t2,1
+  4001c4:	254a0001 	addiu	$10,$10,1
+	bne	$t2,$s2,CROSS
+  4001c8:	1552fff0 	bne	$10,$18,40018c <CROSS>
+  4001cc:	00000000 	nop
+	nop
+  4001d0:	00000000 	nop
+# store result in proper memory location
+	sw	$t3,($t7)
+  4001d4:	adeb0000 	sw	$11,0($15)
+	addiu	$t7,$t7,4
+  4001d8:	25ef0004 	addiu	$15,$15,4
+# loop stuff
+	addiu	$t1,$t1,1
+  4001dc:	25290001 	addiu	$9,$9,1
+	bne	$t1,$s3,CCOL
+  4001e0:	1533ffe8 	bne	$9,$19,400184 <CCOL>
+  4001e4:	00000000 	nop
+	nop
+  4001e8:	00000000 	nop
+# loop stuff	
+	addiu	$t0,$t0,1
+  4001ec:	25080001 	addiu	$8,$8,1
+	bne	$t0,$s0,CROW
+  4001f0:	1510ffe1 	bne	$8,$16,400178 <CROW>
+  4001f4:	00000000 	nop
+	nop
+  4001f8:	00000000 	nop
+# exit
+	li	$v0,0xFA1
+  4001fc:	24020fa1 	li	$2,4001
+	syscall
+  400200:	0000000c 	syscall
+	...
+
+
+Disassembly of section .data:
+
+01000000 <_fdata>:
+ 1000000:	00000001 	0x1
+ 1000004:	00000002 	srl	zero,zero,0x0
+ 1000008:	00000003 	sra	zero,zero,0x0
+ 100000c:	00000004 	sllv	zero,zero,zero
+ 1000010:	00000005 	0x5
+ 1000014:	00000006 	srlv	zero,zero,zero
+
+01000018 <matrixB>:
+ 1000018:	00000005 	0x5
+ 100001c:	00000006 	srlv	zero,zero,zero
+ 1000020:	00000007 	srav	zero,zero,zero
+ 1000024:	00000008 	jr	zero
+ 1000028:	00000009 	jalr	zero,zero
+ 100002c:	0000000a 	0xa
+
+01000030 <sizeA>:
+ 1000030:	00000003 	sra	zero,zero,0x0
+ 1000034:	00000002 	srl	zero,zero,0x0
+
+01000038 <sizeB>:
+ 1000038:	00000002 	srl	zero,zero,0x0
+ 100003c:	00000003 	sra	zero,zero,0x0
+
+01000040 <result>:
+	...

@@ -1,0 +1,148 @@
+
+BinarySearch:     file format elf32-tradbigmips
+
+
+Disassembly of section .text:
+
+00400110 <_ftext>:
+target: .word 11
+notfound: .asciiz "Target not found"
+.text 
+
+# set s1 (low) to 0
+	xori	$s1,$zero,0
+  400110:	38110000 	xori	$17,$0,0x0
+# set s2 (high) to n-1
+	la	$t0,length
+  400114:	8f888018 	lw	$8,-32744($28)
+  400118:	00000000 	nop
+  40011c:	25080000 	addiu	$8,$8,0
+  400120:	00000000 	nop
+	lw	$s2,($t0)
+  400124:	8d120000 	lw	$18,0($8)
+  400128:	00000000 	nop
+	addiu	$s2,$s2,-1
+  40012c:	2652ffff 	addiu	$18,$18,-1
+# load array start address
+	la	$s3,nums
+  400130:	8f938018 	lw	$19,-32744($28)
+  400134:	00000000 	nop
+  400138:	26730004 	addiu	$19,$19,4
+# load target value to s4
+	la	$t0,target
+  40013c:	8f888018 	lw	$8,-32744($28)
+  400140:	00000000 	nop
+  400144:	2508002c 	addiu	$8,$8,44
+  400148:	00000000 	nop
+	lw	$s4,($t0)
+  40014c:	8d140000 	lw	$20,0($8)
+
+00400150 <WHILE>:
+WHILE: blt	$s2,$s1,NOTFOUND
+  400150:	0251082a 	slt	$1,$18,$17
+  400154:	1420001c 	bnez	$1,4001c8 <NOTFOUND>
+  400158:	00000000 	nop
+# store address of mid in t0
+	addu	$t0,$s1,$s2
+  40015c:	02324021 	addu	$8,$17,$18
+	srl	$t0,$t0,1
+  400160:	00084042 	srl	$8,$8,0x1
+	
+# store array index address in t2 and load to t1
+	xor	$t2,$t0,$zero
+  400164:	01005026 	xor	$10,$8,$0
+	sll	$t2,$t2,2
+  400168:	000a5080 	sll	$10,$10,0x2
+	addu	$t2,$t2,$s3
+  40016c:	01535021 	addu	$10,$10,$19
+	lw	$t1,0($t2)
+  400170:	8d490000 	lw	$9,0($10)
+  400174:	00000000 	nop
+# if it is found, print and end
+	
+	bne	$t1,$s4,S1
+  400178:	15340007 	bne	$9,$20,400198 <S1>
+  40017c:	00000000 	nop
+	nop
+  400180:	00000000 	nop
+	li	$v0,1
+  400184:	24020001 	li	$2,1
+	xor	$a0,$t0,$zero
+  400188:	01002026 	xor	$4,$8,$0
+	syscall
+  40018c:	0000000c 	syscall
+# exit
+	li	$v0,10
+  400190:	2402000a 	li	$2,10
+	syscall	
+  400194:	0000000c 	syscall
+
+00400198 <S1>:
+# if it is greater
+S1:	blt	$t1,$s4,S2
+  400198:	0134082a 	slt	$1,$9,$20
+  40019c:	14200006 	bnez	$1,4001b8 <S2>
+  4001a0:	00000000 	nop
+	nop
+  4001a4:	00000000 	nop
+	addiu	$s2,$t0,-1
+  4001a8:	2512ffff 	addiu	$18,$8,-1
+	j WHILE
+  4001ac:	1000ffe8 	b	400150 <WHILE>
+  4001b0:	00000000 	nop
+	nop
+  4001b4:	00000000 	nop
+
+004001b8 <S2>:
+# if it is less
+S2:	addiu	$s1,$t0,1
+  4001b8:	25110001 	addiu	$17,$8,1
+	j	WHILE
+  4001bc:	1000ffe4 	b	400150 <WHILE>
+  4001c0:	00000000 	nop
+	nop
+  4001c4:	00000000 	nop
+
+004001c8 <NOTFOUND>:
+NOTFOUND:
+	li	$v0, 4
+  4001c8:	24020004 	li	$2,4
+	la	$a0, notfound
+  4001cc:	8f848018 	lw	$4,-32744($28)
+  4001d0:	00000000 	nop
+  4001d4:	24840030 	addiu	$4,$4,48
+	syscall
+  4001d8:	0000000c 	syscall
+	li	$v0,0xFA1
+  4001dc:	24020fa1 	li	$2,4001
+	syscall
+  4001e0:	0000000c 	syscall
+	...
+
+
+Disassembly of section .data:
+
+01000000 <_fdata>:
+ 1000000:	0000000a 	0xa
+
+01000004 <nums>:
+ 1000004:	00000001 	0x1
+ 1000008:	00000002 	srl	zero,zero,0x0
+ 100000c:	00000003 	sra	zero,zero,0x0
+ 1000010:	00000004 	sllv	zero,zero,zero
+ 1000014:	00000005 	0x5
+ 1000018:	00000006 	srlv	zero,zero,zero
+ 100001c:	00000007 	srav	zero,zero,zero
+ 1000020:	00000008 	jr	zero
+ 1000024:	00000009 	jalr	zero,zero
+ 1000028:	0000000a 	0xa
+
+0100002c <target>:
+ 100002c:	0000000b 	0xb
+
+01000030 <notfound>:
+ 1000030:	54617267 	0x54617267
+ 1000034:	6574206e 	0x6574206e
+ 1000038:	6f742066 	0x6f742066
+ 100003c:	6f756e64 	0x6f756e64
+	...
