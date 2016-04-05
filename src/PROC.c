@@ -259,7 +259,33 @@ int main(int argc, char * argv[]) {
         		branch = 0b100;
         	}
         }
-        else if(opcode == REGIMM){}
+        else if(opcode == REGIMM){
+        	if(rt == BGEZAL){
+        		//if rs ≥ 0 then procedure_call
+        		//I: target_offset ← sign_extend(offset || 02)
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+
+        		//condition ← GPR[rs] ≥ 0GPRLEN
+        		bool condition = (getRegister((int)rs)) >= 0x00000000;
+
+        		//GPR[31] ← PC + 8
+        		setRegister(31,
+        					(int32_t)PC + 8);
+
+        		//I+1: if condition then
+        		if(condition){
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        		//PC ← PC + target_offset
+        		//endif
+        		//An 18-bit signed offset (the 16-bit offset field shifted left 2 bits)
+        		//is added to the address of the instruction following the branch (not the branch itself),
+        		//in the branch delay slot, to form a PC-relative effective target address.
+        	}
+        }
         else {
         	if(opcode == ADDI){
         		//rt ← rs + immediate
