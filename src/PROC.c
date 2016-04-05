@@ -211,6 +211,10 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         				    getLoRegister());
         	}
+        	else if(func == MTLO){
+        		//LO ← rs
+        		setLoRegister(getRegister((int)rs));
+        	}
         	else if (func == XOR){
         		//rd ← rs XOR rt
         		setRegister((int)rd,
@@ -242,6 +246,11 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         					getHiRegister());
         	}
+        	else if(func == MTHI){
+        		//HI ← rs
+        		setHiRegister(getRegister((int)rs));
+        	}
+
         	else if(func == JR){
         		//PC ← rs
         		//PC = (uint32_t)getRegister((int)rs);//branch delay slot fail
