@@ -193,6 +193,11 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         					getRegister((int)rs) + getRegister((int)rt));
         	}
+        	else if(func == ADDU){
+        		//rd ← rs + rt
+        		setRegister((int)rd,
+        		        	(int32_t)((uint32_t)getRegister((int)rs) + (uint32_t)getRegister((int)rt)));
+        	}
         	else if(func == SUB){
         		//rd ← rs - rt
         		setRegister((int)rd,
