@@ -60,6 +60,8 @@ enum Special_Func {
 	JR		=	0b001000,
 	JALR	=	0b001001,
 
+	SYSCALL = 	0b001100,
+
 	MFHI	=	0b010000,
 	MTHI	=	0b010001,
 	MFLO	=	0b010010,
@@ -196,6 +198,28 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         					getRegister((int)rs) - getRegister((int)rt));
         	}
+        	else if(func == JALR){
+        		//rd ← return_addr, PC ← rs
+        		//The return link is the address of the second instruction following the branch,
+        		//where execution continues after a procedure call.
+
+        		//I: temp← GPR[rs]
+        		//GPR[rd] ← PC + 8
+        		setRegister((int)rd,
+        					(int32_t)PC + 8);
+        		//I+1:if Config1CA = 0
+        		//then PC ← temp
+        		//else
+        		//PC ← tempGPRLEN-1..1 || 0
+        		//ISAMode ← temp0 endif
+
+        		//Jump to the effective target address in GPR rs.
+        		//Execute the instruction that follows the jump,in the branch delay
+        		//slot, before executing the jump itself.
+        		newPC = getRegister((int)rs);
+        		branch = 0b100;
+
+        	}
         	else if(func == MULT){
         		//(HI, LO) ← rs × rt
         		int64_t multiplicand = (int64_t)getRegister((int)rs);
@@ -257,6 +281,11 @@ int main(int argc, char * argv[]) {
         		//continue;
         		newPC = (uint32_t)getRegister((int)rs);
         		branch = 0b100;
+        	}
+        	else if(func == SYSCALL){
+        		uint32_t SID =(uint32_t)getRegister(2);//$v0
+        		SyscallExe(SID);
+
         	}
         }
         else if(opcode == REGIMM){
