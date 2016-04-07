@@ -87,9 +87,9 @@ enum Special_Func {
 
 
 enum Regimm_Rt {
-	BLTZ	=	0b00000,
-	BGEZ	=	0b00001,
-	BLTZAL	=	0b10000,
+	BLTZ	=	0b00000,//NOT TESTED
+	BGEZ	=	0b00001,//NOT TESTED
+	BLTZAL	=	0b10000,//NOT TESTED
 	BGEZAL	=	0b10001//
 };
 
@@ -404,7 +404,57 @@ int main(int argc, char * argv[]) {
         }
         else if(opcode == REGIMM){
         	if(rt == BLTZ){
+        		//if rs < 0 then branch
+        		//I: target_offset ← sign_extend(offset || 02)
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
 
+        		//condition ← GPR[rs] < 0GPRLEN
+        		bool condition = getRegister((int)rs) < 0;
+        		//I+1: if condition then
+        		if(condition){
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        		//PC ← PC + target_offset
+        		//endif
+        	}
+        	else if(rt == BGEZ){
+        		//if rs ≥ 0 then branch
+        		//I: target_offset ← sign_extend(offset || 02)
+        		int32_t offset = immediate << 2;
+				int32_t target_offset = offset << 14;
+				target_offset >>= 14;
+
+        		//condition ← GPR[rs] ≥ 0GPRLEN
+				bool condition = getRegister((int)rs) >= 0;
+        		//I+1: if condition then
+				if(condition){
+					newPC = PC + 4 + target_offset;
+					branch = 0b100;
+				}
+        		//PC ← PC + target_offset
+        		//endif
+        	}
+        	else if(rt == BLTZAL){
+        		//if rs < 0 then procedure_call
+        		//I: target_offset ← sign_extend(offset || 02)
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		//condition ← GPR[rs] < 0GPRLEN
+        		bool condition = (getRegister((int)rs)) < 0;
+        		//GPR[31] ← PC + 8
+        		setRegister(31,
+        					(int32_t)PC + 8);
+        		//I+1: if condition then
+        		if(condition){
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        		//PC ← PC + target_offset
+        		//endif
         	}
         	else if(rt == BGEZAL){
         		//if rs ≥ 0 then procedure_call
