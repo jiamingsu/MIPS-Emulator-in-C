@@ -17,9 +17,9 @@ enum Opcode {
 	J		=	0b000010,
 	JAL		=	0b000011,
 	BEQ		=	0b000100,//
-	BNE		=	0b000101,
-	BLEZ	=	0b000110,
-	BGTZ	=	0b000111,
+	BNE		=	0b000101,/**/
+	BLEZ	=	0b000110,/**/
+	BGTZ	=	0b000111,/**/
 
 	ADDI	=	0b001000,//
 	ADDIU	=	0b001001,//
@@ -30,9 +30,9 @@ enum Opcode {
 	XORI	=	0b001110,/**/
 	LUI		=	0b001111,//
 
-	BEQL	=	0b010100,/***/
-	BNEL	=	0b010101,/***/
-	BLEZL	=	0b010110,
+	BEQL	=	0b010100,/**/
+	BNEL	=	0b010101,/**/
+	BLEZL	=	0b010110,/**/
 
 	LB		=	0b100000,//
 	LH		=	0b100001,
@@ -403,7 +403,10 @@ int main(int argc, char * argv[]) {
         	}
         }
         else if(opcode == REGIMM){
-        	if(rt == BGEZAL){
+        	if(rt == BLTZ){
+
+        	}
+        	else if(rt == BGEZAL){
         		//if rs ≥ 0 then procedure_call
         		//I: target_offset ← sign_extend(offset || 02)
         		int32_t offset = immediate << 2;
@@ -443,6 +446,24 @@ int main(int argc, char * argv[]) {
           	    setRegister((int)rt,
           	    			getRegister((int)rs) + sign_extend);
         	}
+        	else if(opcode == SLTI){
+				//rt ← (rs < immediate)
+				int32_t sign_extend = immediate << 16;
+				sign_extend >>= 16;
+				if(getRegister((int)rs) < sign_extend)
+					setRegister((int)rt, 1);
+				else
+					setRegister((int)rt, 0);
+			}
+			else if(opcode == SLTIU){
+				//rt ← (rs < immediate)
+				uint32_t sign_extend = immediate << 16;
+				sign_extend >>= 16;
+				if(getRegister((int)rs) < immediate)
+					setRegister((int)rt, 1);
+				else
+					setRegister((int)rt, 0);
+			}
         	else if(opcode == BEQ){
         		//if rs = rt then branch
         		//I: target_offset ← sign_extend(offset || 02)
@@ -463,11 +484,111 @@ int main(int argc, char * argv[]) {
         		//PC ← PC + target_offset
         		//endif
         	}
+        	else if(opcode == BEQL){
+        		//if rs = rt then branch_likely
+        		int32_t offset = immediate <<2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+
+        		//condition ← (GPR[rs] = GPR[rt])
+        		bool condition = (getRegister((int)rs) == getRegister((int)rt));
+
+        		//I+1: if condition then
+        		if(condition){
+        			//PC += target_offset;
+        			//continue;//branch delay slot fail
+        			newPC = PC + 4 +  target_offset;
+        			branch = 0b100;
+        		}
+        		else
+        		{
+        			//NullifyCurrentInstruction()
+        			PC += 4;
+        		}
+        	}
+        	else if(opcode == BGTZ){
+        		//if rs > 0 then branch
+        		int32_t offset = immediate <<2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		if(getRegister((int)rs) > 0)
+        		{
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        	}
+        	else if(opcode == BLEZ){
+        		//if rs ≤ 0 then branch
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		if(getRegister((int)rs) <= 0)
+        		{
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        	}
+        	else if(opcode == BLEZL){
+        		//if rs ≤ 0 then branch_likely
+        		//if rs ≤ 0 then branch
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		if(getRegister((int)rs) <= 0)
+        		{
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        		else
+        		{
+        			////NullifyCurrentInstruction()
+        			PC += 4;
+        		}
+        	}
+        	else if(opcode == BNE){
+        		//if rs ≠ rt then branch
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		if(getRegister((int)rs) != getRegister((int)rt))
+        		{
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        	}
+        	else if(opcode == BNEL){
+        		//if rs ≠ rt then branch_likely
+        		int32_t offset = immediate << 2;
+        		int32_t target_offset = offset << 14;
+        		target_offset >>= 14;
+        		if(getRegister((int)rs) != getRegister((int)rt))
+        		{
+        			newPC = PC + 4 + target_offset;
+        			branch = 0b100;
+        		}
+        		else
+        		{
+        			PC += 4;
+        		}
+        	}
         	else if(opcode == LUI){
         		//rt ← immediate || 016
         		setRegister((int)rt,
         					(int32_t)(immediate << 16));
         	}
+
+        	else if(opcode == ANDI){
+				//GPR[rt] ← GPR[rs] and zero_extend(immediate)
+				//immediate = ox0000ffff & CurrentInstruction, already zero_extended.
+				setRegister((int)rt,
+							(int32_t)((uint32_t)getRegister((int)rs) & immediate));
+			}
+        	else if(opcode == XORI){
+				//GPR[rt] ← GPR[rs] XOR zero_extend(immediate)
+				//immediate = ox0000ffff & CurrentInstruction, already zero_extended.
+				setRegister((int)rt,
+							(int32_t)((uint32_t)getRegister((int)rs) ^ immediate));
+			}
         	else if(opcode == ORI){
         		//rt ← rs or immediate
         		setRegister((int)rt,
