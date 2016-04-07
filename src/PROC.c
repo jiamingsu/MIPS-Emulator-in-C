@@ -23,15 +23,15 @@ enum Opcode {
 
 	ADDI	=	0b001000,//
 	ADDIU	=	0b001001,//
-	SLTI	=	0b001010,
-	SLTIU	=	0b001011,
-	ANDI	=	0b001100,
+	SLTI	=	0b001010,/**/
+	SLTIU	=	0b001011,/**/
+	ANDI	=	0b001100,/**/
 	ORI		=	0b001101,//
-	XORI	=	0b001110,
+	XORI	=	0b001110,/**/
 	LUI		=	0b001111,//
 
-	BEQL	=	0b010100,
-	BNEL	=	0b010101,
+	BEQL	=	0b010100,/***/
+	BNEL	=	0b010101,/***/
 	BLEZL	=	0b010110,
 
 	LB		=	0b100000,//
@@ -52,10 +52,10 @@ enum Opcode {
 enum Special_Func {
 	SLL		=	0b000000, // NOP
 	SRL		=	0b000010,//
-	SRA		=	0b000011,
-	SLLV	=	0b000100,
-	SRLV	=	0b000110,
-	SRAV	=	0b000111,
+	SRA		=	0b000011,//NOT TESTED
+	SLLV	=	0b000100,//NOT TESTED
+	SRLV	=	0b000110,//NOT TESTED
+	SRAV	=	0b000111,//NOT TESTED
 
 	JR		=	0b001000,//
 	JALR	=	0b001001,//
@@ -68,21 +68,21 @@ enum Special_Func {
 	MTLO	=	0b010011,//
 
 	MULT	=	0b011000,//
-	MULTU	=	0b011001,
+	MULTU	=	0b011001,//NOT TESTED
 	DIV		=	0b011010,//
-	DIVU	=	0b011011,
+	DIVU	=	0b011011,//NOT TESTED
 
 	ADD		=	0b100000,//
 	ADDU	=	0b100001,//
 	SUB		=	0b100010,//
-	SUBU	=	0b100011,
-	AND		=	0b100100,
-	OR		=	0b100101,
+	SUBU	=	0b100011,//NOT TESTED
+	AND		=	0b100100,//NOT TESTED
+	OR		=	0b100101,//NOT TESTED
 	XOR		=	0b100110,//
-	NOR		=	0b100111,
+	NOR		=	0b100111,//NOT TESTED
 
-	SLT		=	0b101010,
-	SLTU	=	0b101011
+	SLT		=	0b101010,//NOT TESTED
+	SLTU	=	0b101011//NOT TESTED
 };
 
 
@@ -123,7 +123,7 @@ int main(int argc, char * argv[]) {
 	uint32_t func;// 5 4 3 2 1 0
 	uint32_t immediate;//offset 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
 	uint32_t instr_index;//25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-	uint32_t r0;//6
+	//uint32_t r0;//6
 
     if (argc < 2) {
       printf("Input argument missing \n");
@@ -164,7 +164,7 @@ int main(int argc, char * argv[]) {
         func	=	0x0000003f;// 5 4 3 2 1 0
         immediate = 0x0000ffff;//offset 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
         instr_index = 0x03ffffff;//25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-        r0 = 0x00000040;//6
+        //r0 = 0x00000040;//6
 
         opcode &= CurrentInstruction;
         opcode >>= 26;//shift right logical
@@ -185,8 +185,8 @@ int main(int argc, char * argv[]) {
         immediate &= CurrentInstruction;
         instr_index &= CurrentInstruction;
 
-        r0 &= CurrentInstruction;
-        r0 >>= 6;
+        //r0 &= CurrentInstruction;
+        //r0 >>= 6;
         if(opcode == SPECIAL){
         	if(func == ADD){
         		//rd ← rs + rt
@@ -202,6 +202,25 @@ int main(int argc, char * argv[]) {
         		//rd ← rs - rt
         		setRegister((int)rd,
         					getRegister((int)rs) - getRegister((int)rt));
+        	}
+        	else if(func == SUBU){
+        		//rd ← rs - rt
+        		uint32_t temp = (uint32_t)getRegister((int)rs);
+        		uint32_t temp_1 = (uint32_t)getRegister((int)rt);
+        		temp_1 = ~temp_1;
+        		temp_1 += 1;
+        		setRegister((int)rd,
+        		        	temp + temp_1);
+        	}
+        	else if(func == AND){
+        		//rd ← rs AND rt
+        		setRegister((int)rd,
+        					getRegister((int)rs) & getRegister((int)rt));
+        	}
+        	else if(func == OR){
+        		//rd ← rs OR rt
+        		setRegister((int)rd,
+        					getRegister((int)rs) | getRegister((int)rt));
         	}
         	else if(func == JALR){
         		//rd ← return_addr, PC ← rs
@@ -235,6 +254,21 @@ int main(int argc, char * argv[]) {
         		setLoRegister(lo);
         		setHiRegister(hi);
         	}
+        	else if(func == MULTU){
+        		//(HI, LO) ← rs × rt
+        		//treating both operands as unsigned val- ues, to produce a 64-bit result
+        		//
+        		//prod← (0 || GPR[rs]31..0) × (0 || GPR[rt]31..0)
+        		uint64_t multiplicand = (uint64_t)getRegister((int)rs);
+        		uint64_t multiplier = (uint64_t)getRegister((int)rt);
+        		uint64_t product = multiplicand * multiplier;
+        		uint32_t lo = (uint32_t)(product & 0xFFFFFFFF);
+        		uint32_t hi = (uint32_t)((product>>32) & 0xFFFFFFFF);
+        		setLoRegister(lo);
+        		setHiRegister(hi);
+        		//LO ← prod31..0
+        		//HI ← prod63..32
+        	}
         	else if (func == MFLO){
         		//rd ← LO
         		setRegister((int)rd,
@@ -244,10 +278,15 @@ int main(int argc, char * argv[]) {
         		//LO ← rs
         		setLoRegister(getRegister((int)rs));
         	}
-        	else if (func == XOR){
+        	else if(func == XOR){
         		//rd ← rs XOR rt
         		setRegister((int)rd,
         					getRegister((int)rs) ^ getRegister((int)rt));
+        	}
+        	else if(func == NOR){
+        		//rd ← rs NOR rt
+        		setRegister((int)rd,
+        					~(getRegister((int)rs) | getRegister((int)rt)));
         	}
         	else if(func == SLL){
         		//rd ← rt << sa
@@ -256,6 +295,17 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         					getRegister((int)rt) << sa);
         	}
+        	else if(func == SLLV){
+        		//rd ← rt << rs
+        		//s ← GPR[rs]4..0 s
+        		int32_t s = getRegister((int)rs);
+        		s &= 0x0000001F;//specified by the low-order 5 bits of GPR rs. 5 bit 0 to 31
+        		setRegister((int)rd,
+        					getRegister((int)rt) << s);
+        		//temp ← GPR[rt](31-s)..0 || 0
+        		//GPR[rd]← temp
+
+        	}
         	else if(func == SRL){
         		//rd ← rt >> sa (logical)
         		int sa = shamt;
@@ -263,10 +313,55 @@ int main(int argc, char * argv[]) {
         		setRegister((int)rd,
         					temp >> sa);
         	}
+        	else if(func == SRLV){
+        		//rd ← rt >> rs (logical)
+
+        		//The contents of the low-order 32-bit word of GPR rt are shifted right, inserting zeros into the emptied bits; the word
+        		//result is placed in GPR rd. The bit-shift amount is specified by the low-order 5 bits of GPR rs.
+        		//s ← GPR[rs]4..0
+        		int32_t s = getRegister((int)rs);
+        		s &= 0x0000001F;
+
+
+        		//temp ← 0s || GPR[rt]31..s
+        		uint32_t temp = (uint32_t)getRegister((int)rt);
+        		temp >>= s;
+        		//GPR[rd]← temp
+        		setRegister((int)rd,
+        					(int32_t)temp);
+        	}
+        	else if(func == SRA){
+        		//rd ← rt >> sa
+        		int sa = shamt;
+        		int32_t temp = getRegister((int)rt);
+        		setRegister((int)rd,
+        					temp >> sa);
+        	}
+        	else if(func == SRAV){
+        		//rd ← rt >> rs (arithmetic)
+        		//s ← GPR[rs]4..0s
+        		int32_t s = getRegister((int)rs);
+        		s &= 0x0000001F;
+
+        		//temp ← (GPR[rt]31) || GPR[rt]31..s
+        		int32_t temp = getRegister((int)rt);
+        		//GPR[rd]← temp
+        		setRegister((int)rd,
+        					temp >> s);
+
+        	}
         	else if(func == DIV){
         		//(HI, LO) ← rs / rt
         		int32_t quotient = getRegister((int)rs) / getRegister((int)rt);
         		int32_t remainder = getRegister((int)rs) % getRegister((int)rt);
+        		setLoRegister(quotient);
+        		setHiRegister(remainder);
+        	}
+        	else if(func == DIVU){
+        		//(HI, LO) ← rs / rt
+        		//treating both operands as unsigned values
+        		uint32_t quotient = (uint32_t)getRegister((int)rs) / (uint32_t)getRegister((int)rt);
+        		uint32_t remainder = (uint32_t)getRegister((int)rs) % (uint32_t)getRegister((int)rt);
         		setLoRegister(quotient);
         		setHiRegister(remainder);
         	}
@@ -286,6 +381,20 @@ int main(int argc, char * argv[]) {
         		//continue;
         		newPC = (uint32_t)getRegister((int)rs);
         		branch = 0b100;
+        	}
+        	else if(func == SLT){
+        		//rd ← (rs < rt)
+        		if(getRegister((int)rs) < getRegister((int)rt))
+        			setRegister((int)rd, 1);
+        		else
+        			setRegister((int)rd, 0);
+        	}
+        	else if(func == SLTU){
+        		//rd ← (rs < rt)
+        		if((uint32_t)getRegister((int)rs) < (uint32_t)getRegister((int)rt))
+        			setRegister((int)rd, 1);
+        		else
+        			setRegister((int)rd, 0);
         	}
         	else if(func == SYSCALL){
         		uint32_t SID =(uint32_t)getRegister(2);//$v0
