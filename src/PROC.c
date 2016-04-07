@@ -12,10 +12,10 @@
 uint32_t DynInstCount = 0;
 
 enum Opcode {
-	SPECIAL	=	0b000000,
-	REGIMM	=	0b000001,
-	J		=	0b000010,
-	JAL		=	0b000011,
+	SPECIAL	=	0b000000,//NOT TESTED
+	REGIMM	=	0b000001,//NOT TESTED
+	J		=	0b000010,//NOT TESTED
+	JAL		=	0b000011,//NOT TESTED
 	BEQ		=	0b000100,//
 	BNE		=	0b000101,/**/
 	BLEZ	=	0b000110,/**/
@@ -42,10 +42,10 @@ enum Opcode {
 	LHU		=	0b100101,
 	LWR		=	0b100110,
 
-	SB		=	0b101000,
+	SB		=	0b101000,//NOT TESTED
 	SH		=	0b101001,
 	SWL		=	0b101010,
-	SW		=	0b101011,
+	SW		=	0b101011,//NOT TESTED
 	SWR		=	0b101110
 };
 
@@ -483,7 +483,24 @@ int main(int argc, char * argv[]) {
         	}
         }
         else {
-        	if(opcode == ADDI){
+        	if(opcode == J){
+        		//Jump to the effective target address.
+        		//Execute the instruction that follows the jump,
+        		//in the branch delay slot, before executing the jump itself.
+        		//I:
+        		//I+1:PC ← PCGPRLEN-1..28 || instr_index || 02
+        		newPC = ((PC + 4) & 0xf00000000) | (instr_index << 2);
+        		branch = 0b100;
+        	}
+        	else if(opcode == JAL){
+        		//I: GPR[31]← PC + 8
+        		setRegister(31,
+        					(int32_t)PC + 8);
+        		//I+1:PC ← PCGPRLEN-1..28 || instr_index || 02
+        		newPC = ((PC + 4) & 0xf00000000) | (instr_index << 2);
+				branch = 0b100;
+        	}
+        	else if(opcode == ADDI){
         		//rt ← rs + immediate
         		int32_t sign_extend = immediate << 16;
         		sign_extend >>= 16;
@@ -676,6 +693,44 @@ int main(int argc, char * argv[]) {
         		//memword← LoadMemory (CCA, BYTE, pAddr, vAddr, DATA)
         		//byte ← vAddr1..0 xor BigEndianCPU2
         		//GPR[rt]← sign_extend(memword7+8*byte..8*byte)
+        	}
+        	else if(opcode == LBU){
+
+        	}
+
+        	else if(opcode == LH){
+
+        	}
+
+        	else if(opcode == LHU){
+
+        	}
+        	else if(opcode == LWL){
+
+        	}
+
+        	else if(opcode == LWR){
+
+        	}
+
+        	else if(opcode == SB){
+
+        	}
+
+        	else if(opcode == SH){
+
+        	}
+
+        	else if(opcode == SW){
+
+        	}
+
+        	else if(opcode == SWL){
+
+        	}
+
+        	else if(opcode == SWR){
+
         	}
         }
 
