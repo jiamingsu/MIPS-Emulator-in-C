@@ -695,25 +695,154 @@ int main(int argc, char * argv[]) {
         		//GPR[rt]← sign_extend(memword7+8*byte..8*byte)
         	}
         	else if(opcode == LBU){
-
+        		//to load a byte from memory as an unsigned value
+				//rt ← memory[base+offset]
+				//vAddr ← sign_extend(offset) + GPR[base]
+				int32_t offset = immediate << 16;
+				offset >>= 16;
+				int32_t base = getRegister((int)rs);
+				uint32_t vAddr = (uint32_t)(base + offset);
+				uint8_t byte = readByte(vAddr,false);
+				uint32_t zero_extended_byte = 0x000000ff & byte;
+				setRegister((int)rt,
+							zero_extended_byte);
         	}
-
         	else if(opcode == LH){
+				//To load a halfword from memory as a signed value
+				//rt ← memory[base+offset]
+				//vAddr ← sign_extend(offset) + GPR[base]
 
-        	}
-
+				uint32_t HalfWord;
+				int32_t offset = immediate << 16;
+				offset >>= 16;
+				int32_t base = getRegister((int)rs);
+				uint32_t vAddr = (uint32_t)(base + offset);
+				HalfWord = readByte(vAddr,false);
+				HalfWord = HalfWord << 8;
+				HalfWord = HalfWord | (readByte(vAddr + 1, false));//
+				int32_t sign_extended_half_word = HalfWord << 16;
+				sign_extended_half_word >>= 16;
+				setRegister((int)rt,
+							sign_extended_half_word);
+			}
         	else if(opcode == LHU){
+				//To load a halfword from memory as an unsigned value
+				//rt ← memory[base+offset]
+				//vAddr ← sign_extend(offset) + GPR[base]
 
-        	}
+				uint32_t HalfWord;
+				int32_t offset = immediate << 16;
+				offset >>= 16;
+				int32_t base = getRegister((int)rs);
+				uint32_t vAddr = (uint32_t)(base + offset);
+				HalfWord = readByte(vAddr,false);
+				HalfWord = HalfWord << 8;
+				HalfWord = HalfWord | (readByte(vAddr + 1, false));//
+				setRegister((int)rt,
+							HalfWord);
+
+			}
         	else if(opcode == LWL){
-
+        		int32_t offset = immediate << 16;
+        		offset >>=16;
+        		int32_t base = getRegister((int)rs);
+        		uint32_t vAddr = (uint32_t)(base + offset);
+        		uint32_t current_Word_Addr = vAddr & 0xFFFFFFFC;
+        		uint32_t next_Word_Addr = current_Word_Addr + 4;
+        		uint32_t temp=0;
+        		for (uint32_t current_Byte_Addr = vAddr; current_Byte_Addr < next_Word_Addr; current_Byte_Addr++){
+        			temp <<= 8;//order of this two
+        			temp |= readByte(current_Byte_Addr,false);//order of this two
+        		}
+        		int delta = vAddr - current_Word_Addr;
+        		temp <<= (delta*8);
+        		//rt ← rt MERGE memory[base+offset]
+        		switch(delta){
+        		case 0:
+        			setRegister((int)rt,
+        						temp | (getRegister((int)rt) & 0x00000000));
+        			break;
+        		case 1:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0x000000FF));
+					break;
+        		case 2:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0x0000FFFF));
+					break;
+        		case 3:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0x00FFFFFF));
+					break;
+        		}
         	}
+//            else if(opcode == LWL){
+//                uint32_t MSK_LWL = 0xffffffff;
+//                int32_t offset = immediate << 16;
+//                offset >>= 16;
+//                int32_t base = getRegister((int) rs);
+//                uint32_t vAddr = (uint32_t)(base + offset);
+//                int alignment_diff = vAddr % 4;// the value can only be 0, 1, 2, 3.
+//                //NOTE: EVEN IF vAddr is negative, remember the % rule is different in the number system, and computer system
+//                /*setRegister((int)rt,
+//                            (int32_t)(readWord(vAddr, false) << alignment_diff*8) | ((uint32_t)getRegister((int)rt) & (MSK_LWL >> ((4-alignment_diff)*8))));*/
+//                //above is the integrated format, now step by step
+//                int32_t new_rt_value;
+//                uint32_t temp_data = readWord(vAddr - alignment_diff);//first get the whole word out
+//
+//                //shift to the unalignment position
+//                temp_data = temp_data << (alignment_diff * 8);
+//                uint32_t ori_rt_value = getRegister((int) rt);
+//                uint32_t temp_rt_value = (ori_rt_value & (MSK_LWL >>(4-alignment_diff)*8));
+//                new_rt_value = (int32_t) (temp_data | temp_rt_value);
+//                setRegister((int)rt,
+//                            new_rt_value);
+//
+//            }
 
         	else if(opcode == LWR){
-
+        		int32_t offset = immediate << 16;
+        		offset >>=16;
+        		int32_t base = getRegister((int)rs);
+        		uint32_t vAddr = (uint32_t)(base + offset);
+        		uint32_t current_Word_Addr = vAddr & 0xFFFFFFFC;
+        		//uint32_t next_Word_Addr = current_Word_Addr + 4;
+        		uint32_t temp=0;
+        		for (uint32_t current_Byte_Addr = current_Word_Addr; current_Byte_Addr <= vAddr; current_Byte_Addr++){
+        			temp <<= 8;//order of this two
+        			temp |= readByte(current_Byte_Addr,false);//order of this two
+        		}
+        		int delta = vAddr - current_Word_Addr;
+        		switch(delta){
+        		case 0:
+        			setRegister((int)rt,
+        						temp | (getRegister((int)rt) & 0xFFFFFF00));
+        			break;
+        		case 1:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0xFFFF0000));
+					break;
+        		case 2:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0xFF000000));
+					break;
+        		case 3:
+					setRegister((int)rt,
+								temp | (getRegister((int)rt) & 0x00000000));
+					break;
+        		}
         	}
 
         	else if(opcode == SB){
+        		// to store a byte to memory
+				// memory[base+offset] ← rt
+				int32_t offset = immediate << 16;
+				offset >>= 16;
+				int32_t base = getRegister((int)rs);
+				uint32_t vAddr = (uint32_t)(base + offset);
+				uint32_t lsb8bit_rt = (uint32_t)getRegister((int)rt) & 0x0000000f;
+				uint8_t byte = (uint8_t) lsb8bit_rt;
+				writeByte(vAddr,byte,false);
 
         	}
 
@@ -722,7 +851,13 @@ int main(int argc, char * argv[]) {
         	}
 
         	else if(opcode == SW){
-
+        		// memory[base+offset] ← rt
+				int32_t offset = immediate << 16;
+				offset >>= 16;
+				int32_t base = getRegister((int)rs);
+				uint32_t vAddr = (uint32_t)(base + offset);
+				uint32_t Word = (uint32_t)getRegister((int)rt);
+				writeWord(vAddr,Word,false);
         	}
 
         	else if(opcode == SWL){
