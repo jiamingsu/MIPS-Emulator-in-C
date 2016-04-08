@@ -35,18 +35,18 @@ enum Opcode {
 	BLEZL	=	0b010110,/**/
 
 	LB		=	0b100000,//
-	LH		=	0b100001,
-	LWL		=	0b100010,
+	LH		=	0b100001,//NOT TESTED
+	LWL		=	0b100010,//NOT TESTED
 	LW		=	0b100011,//
-	LBU		=	0b100100,
-	LHU		=	0b100101,
-	LWR		=	0b100110,
+	LBU		=	0b100100,//NOT TESTED
+	LHU		=	0b100101,//NOT TESTED
+	LWR		=	0b100110,//NOT TESTED
 
 	SB		=	0b101000,//NOT TESTED
-	SH		=	0b101001,
-	SWL		=	0b101010,
+	SH		=	0b101001,//NOT TESTED
+	SWL		=	0b101010,//NOT TESTED
 	SW		=	0b101011,//NOT TESTED
-	SWR		=	0b101110
+	SWR		=	0b101110//NOT TESTED
 };
 
 enum Special_Func {
@@ -102,8 +102,7 @@ void write_initialization_vector(uint32_t sp, uint32_t gp, uint32_t start) {
         RegFile[29] = sp;
         RegFile[31] = start;
         printRegFile();
-
-    }
+}
 
 
 int main(int argc, char * argv[]) {
@@ -846,9 +845,20 @@ int main(int argc, char * argv[]) {
 
         	}
 
-        	else if(opcode == SH){
+            else if(opcode == SH){
+                // To store a halfword to memory
+                // memory[base+offset] ← rt
+                int32_t offset = immediate << 16;
+                offset >>= 16;
+                int32_t base = getRegister((int)rs);
+                uint32_t vAddr = (uint32_t)(base + offset);
+                uint32_t rt_value = getRegister((int)rt);
+                uint8_t byte0 = rt_value;
+                uint8_t byte1 = rt_value >> 8;
+                writeByte(vAddr+1, byte0, false);
+                writeByte(vAddr+0, byte1, false);
 
-        	}
+            }
 
         	else if(opcode == SW){
         		// memory[base+offset] ← rt
@@ -859,14 +869,64 @@ int main(int argc, char * argv[]) {
 				uint32_t Word = (uint32_t)getRegister((int)rt);
 				writeWord(vAddr,Word,false);
         	}
+            else if(opcode == SWL){
+                int32_t offset = immediate << 16;
+                offset >>= 16;
+                int32_t base = getRegister((int)rs);
+                uint32_t vAddr = (uint32_t)(base + offset);
+                uint32_t ori_rt_data = (uint32_t)getRegister((int)rt);
+                uint32_t current_Word_Addr = vAddr & 0xFFFFFFFC;
+                uint32_t current_Word = readWord(current_Word_Addr,false);
+                uint32_t next_Word_Addr = current_Word_Addr + 4;//UNUSED VARIABLE
+                uint32_t data = 0x00000000;
 
-        	else if(opcode == SWL){
+                int delta = current_Word_Addr - vAddr;
+                switch(delta)
+                {
+                case 0:
+                    data = ori_rt_data      | (current_Word & 0x00000000); break;
 
-        	}
+                case 1:
+                    data = ori_rt_data >> 8 | (current_Word & 0xff000000);break;
 
-        	else if(opcode == SWR){
+                case 2:
+                    data = ori_rt_data >> 16 |(current_Word & 0xffff0000);break;
 
-        	}
+                case 3:
+                    data = ori_rt_data >> 24 | (current_Word & 0xffffff00);break;
+                }
+                writeWord(vAddr, data,false);
+            }
+
+            else if(opcode == SWR){
+                int32_t offset = immediate << 16;
+                offset >>= 16;
+                int32_t base = getRegister((int)rs);
+                uint32_t vAddr = (uint32_t)(base + offset);
+                uint32_t ori_rt_data = (uint32_t)getRegister((int)rt);
+                uint32_t current_Word_Addr = vAddr & 0xFFFFFFFC;
+                uint32_t current_Word = readWord(current_Word_Addr,false);
+                uint32_t next_Word_Addr = current_Word_Addr + 4;//UNUSED VARIABLE
+                uint32_t data = 0x00000000;
+
+                int delta = current_Word_Addr - vAddr;
+                switch(delta)
+                {
+                case 0:
+                    data = ori_rt_data << 24 | (current_Word & 0x00ffffff); break;
+
+                case 1:
+                    data = ori_rt_data << 16 | (current_Word & 0x0000ffff);break;
+
+                case 2:
+                    data = ori_rt_data << 8  | (current_Word & 0x000000ff);break;
+
+                case 3:
+                    data = ori_rt_data       | (current_Word & 0x00000000);break;
+                }
+                writeWord(vAddr, data,false);
+
+            }
         }
 
         PC += 4;
