@@ -249,8 +249,8 @@ int main(int argc, char * argv[]) {
                 int64_t multiplicand = (int64_t)getRegister((int)rs);
                 int64_t multiplier = (int64_t)getRegister((int)rt);
                 int64_t product = multiplicand * multiplier;
-                int32_t lo = (int32_t)(product & 0xFFFFFFFF);
-                int32_t hi = (int32_t)((product >>32) & 0xFFFFFFFF);
+                int32_t lo = (int32_t)(product & 0x00000000FFFFFFFF);
+                int32_t hi = (int32_t)((product >>32) & 0x00000000FFFFFFFF);
                 setLoRegister(lo);
                 setHiRegister(hi);
             }
@@ -262,8 +262,8 @@ int main(int argc, char * argv[]) {
                 uint64_t multiplicand = (uint64_t)getRegister((int)rs);
                 uint64_t multiplier = (uint64_t)getRegister((int)rt);
                 uint64_t product = multiplicand * multiplier;
-                uint32_t lo = (uint32_t)(product & 0xFFFFFFFF);
-                uint32_t hi = (uint32_t)((product>>32) & 0xFFFFFFFF);
+                uint32_t lo = (uint32_t)(product & 0x00000000FFFFFFFF);
+                uint32_t hi = (uint32_t)((product>>32) & 0x00000000FFFFFFFF);
                 setLoRegister(lo);
                 setHiRegister(hi);
                 //LO ← prod31..0
@@ -489,7 +489,7 @@ int main(int argc, char * argv[]) {
                 //in the branch delay slot, before executing the jump itself.
                 //I:
                 //I+1:PC ← PCGPRLEN-1..28 || instr_index || 02
-                newPC = ((PC + 4) & 0xf00000000) | (instr_index << 2);
+                newPC = ((PC + 4) & 0xf0000000) | (instr_index << 2);
                 branch = 0b100;
             }
             else if(opcode == JAL){
@@ -497,7 +497,7 @@ int main(int argc, char * argv[]) {
                 setRegister(31,
                             (int32_t)PC + 8);
                 //I+1:PC ← PCGPRLEN-1..28 || instr_index || 02
-                newPC = ((PC + 4) & 0xf00000000) | (instr_index << 2);
+                newPC = ((PC + 4) & 0xf0000000) | (instr_index << 2);
                 branch = 0b100;
             }
             else if(opcode == ADDI){
@@ -524,9 +524,9 @@ int main(int argc, char * argv[]) {
             }
             else if(opcode == SLTIU){
                 //rt ← (rs < immediate)
-                uint32_t sign_extend = immediate << 16;
-                sign_extend >>= 16;
-                if(getRegister((int)rs) < immediate)
+                //uint32_t sign_extend = immediate << 16;
+                //sign_extend >>= 16;
+                if(((uint32_t)getRegister((int)rs)) < immediate)
                     setRegister((int)rt, 1);
                 else
                     setRegister((int)rt, 0);
@@ -648,18 +648,18 @@ int main(int argc, char * argv[]) {
                 //GPR[rt] ← GPR[rs] and zero_extend(immediate)
                 //immediate = ox0000ffff & CurrentInstruction, already zero_extended.
                 setRegister((int)rt,
-                            (int32_t)((uint32_t)getRegister((int)rs) & immediate));
+                            (int32_t)(((uint32_t)getRegister((int)rs)) & immediate));
             }
             else if(opcode == XORI){
                 //GPR[rt] ← GPR[rs] XOR zero_extend(immediate)
                 //immediate = ox0000ffff & CurrentInstruction, already zero_extended.
                 setRegister((int)rt,
-                            (int32_t)((uint32_t)getRegister((int)rs) ^ immediate));
+                            (int32_t)(((uint32_t)getRegister((int)rs)) ^ immediate));
             }
             else if(opcode == ORI){
                 //rt ← rs or immediate
                 setRegister((int)rt,
-                            (int32_t)((uint32_t)getRegister((int)rs) | immediate));
+                            (int32_t)(((uint32_t)getRegister((int)rs)) | immediate));
             }
             else if (opcode == LW){
                 //rt ← memory[base+offset]
@@ -682,7 +682,7 @@ int main(int argc, char * argv[]) {
                 offset >>= 16;//0xFFFF8000
                 int32_t base = getRegister((int)rs);
                 uint32_t vAddr = (uint32_t)(base + offset);
-                uint8_t byte = readByte(vAddr,false);//x86 little Endian? MIPS Big Endian?
+                uint8_t byte = readByte(vAddr,false);
                 int32_t sign_extend_byte = byte;
                 sign_extend_byte <<= 24;
                 sign_extend_byte >>= 24;
@@ -703,7 +703,7 @@ int main(int argc, char * argv[]) {
                 int32_t base = getRegister((int)rs);
                 uint32_t vAddr = (uint32_t)(base + offset);
                 uint8_t byte = readByte(vAddr,false);
-                uint32_t zero_extended_byte = 0x000000ff & byte;
+                uint32_t zero_extended_byte = byte;//0x000000ff & byte
                 setRegister((int)rt,
                             zero_extended_byte);
             }
