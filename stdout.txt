@@ -1,0 +1,1 @@
+Rectangle(3,4) area is: 12

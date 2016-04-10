@@ -11,10 +11,10 @@
 uint32_t DynInstCount = 0;
 
 enum Opcode {
-    SPECIAL =   0b000000,//NOT TESTED
-    REGIMM  =   0b000001,//NOT TESTED
-    J       =   0b000010,//NOT TESTED
-    JAL     =   0b000011,//NOT TESTED
+    SPECIAL =   0b000000,//
+    REGIMM  =   0b000001,//
+    J       =   0b000010,//
+    JAL     =   0b000011,//
     BEQ     =   0b000100,//
     BNE     =   0b000101,/**/
     BLEZ    =   0b000110,/**/
@@ -41,20 +41,20 @@ enum Opcode {
     LHU     =   0b100101,
     LWR     =   0b100110,
 
-    SB      =   0b101000,//NOT TESTED
+    SB      =   0b101000,//
     SH      =   0b101001,
     SWL     =   0b101010,
-    SW      =   0b101011,//NOT TESTED
+    SW      =   0b101011,//
     SWR     =   0b101110
 };
 
 enum Special_Func {
     SLL     =   0b000000, // NOP
     SRL     =   0b000010,//
-    SRA     =   0b000011,//NOT TESTED
-    SLLV    =   0b000100,//NOT TESTED
-    SRLV    =   0b000110,//NOT TESTED
-    SRAV    =   0b000111,//NOT TESTED
+    SRA     =   0b000011,//
+    SLLV    =   0b000100,//
+    SRLV    =   0b000110,//
+    SRAV    =   0b000111,//
 
     JR      =   0b001000,//
     JALR    =   0b001001,//
@@ -67,28 +67,28 @@ enum Special_Func {
     MTLO    =   0b010011,//
 
     MULT    =   0b011000,//
-    MULTU   =   0b011001,//NOT TESTED
+    MULTU   =   0b011001,//
     DIV     =   0b011010,//
-    DIVU    =   0b011011,//NOT TESTED
+    DIVU    =   0b011011,//
 
     ADD     =   0b100000,//
     ADDU    =   0b100001,//
     SUB     =   0b100010,//
-    SUBU    =   0b100011,//NOT TESTED
-    AND     =   0b100100,//NOT TESTED
-    OR      =   0b100101,//NOT TESTED
+    SUBU    =   0b100011,//
+    AND     =   0b100100,//
+    OR      =   0b100101,//
     XOR     =   0b100110,//
-    NOR     =   0b100111,//NOT TESTED
+    NOR     =   0b100111,//
 
-    SLT     =   0b101010,//NOT TESTED
-    SLTU    =   0b101011//NOT TESTED
+    SLT     =   0b101010,//
+    SLTU    =   0b101011//
 };
 
 
 enum Regimm_Rt {
-    BLTZ    =   0b00000,//NOT TESTED
-    BGEZ    =   0b00001,//NOT TESTED
-    BLTZAL  =   0b10000,//NOT TESTED
+    BLTZ    =   0b00000,//
+    BGEZ    =   0b00001,//
+    BLTZAL  =   0b10000,//
     BGEZAL  =   0b10001//
 };
 
@@ -207,10 +207,10 @@ int main(int argc, char * argv[]) {
                 //rd ← rs - rt
                 uint32_t temp = (uint32_t)getRegister((int)rs);
                 uint32_t temp_1 = (uint32_t)getRegister((int)rt);
-                temp_1 = ~temp_1;
-                temp_1 += 1;
+                //temp_1 = ~temp_1;
+                //temp_1 += 1;
                 setRegister((int)rd,
-                            temp + temp_1);
+                            temp - temp_1);
             }
             else if(func == AND){
                 //rd ← rs AND rt
@@ -259,8 +259,8 @@ int main(int argc, char * argv[]) {
                 //treating both operands as unsigned val- ues, to produce a 64-bit result
                 //
                 //prod← (0 || GPR[rs]31..0) × (0 || GPR[rt]31..0)
-                uint64_t multiplicand = (uint64_t)getRegister((int)rs);
-                uint64_t multiplier = (uint64_t)getRegister((int)rt);
+                uint64_t multiplicand = (uint32_t)getRegister((int)rs);
+                uint64_t multiplier = (uint32_t)getRegister((int)rt);
                 uint64_t product = multiplicand * multiplier;
                 uint32_t lo = (uint32_t)(product & 0x00000000FFFFFFFF);
                 uint32_t hi = (uint32_t)((product>>32) & 0x00000000FFFFFFFF);
